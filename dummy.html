@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background: #f4f4f4;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 5px;
+        }
+
+        .sidebar ul li:hover {
+            background: #0056b3;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: scale(1.02);
+        }
+
+        /* Styled Graph Card */
+        .graph-card {
+            grid-column: span 2;
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .graph-container {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: 180px !important; /* Reduced size */
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Dashboard</h2>
+        <ul>
+            <li onclick="showSection('overview')">Overview</li>
+            <li onclick="showSection('graphs')">Graphs</li>
+            <li onclick="showSection('pumpStatus')">Pump Status</li>
+            <li onclick="showSection('mlPredictions')">ML Predictions</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1 id="sectionTitle">Overview</h1>
+
+        <!-- Updated Overview Section -->
+        <div id="overview" class="dashboard-container fade-in">
+            <div class="card">
+                <h3>Water Flow Rate</h3>
+                <p>Current Flow: <strong>50 L/hr</strong></p>
+                <p>Peak Flow Today: <strong>120 L/hr</strong></p>
+            </div>
+            <div class="card">
+                <h3>Pump Status</h3>
+                <p>Status: <strong>Active</strong></p>
+                <p>Last Pump On: <strong>12:45 PM</strong></p>
+            </div>
+            <div class="card">
+                <h3>Water Consumption</h3>
+                <p>Total Usage: <strong>2000L</strong></p>
+                <p>Today's Usage: <strong>150L</strong></p>
+            </div>
+            <div class="card">
+                <h3>System Alerts</h3>
+                <p>No alerts detected</p>
+            </div>
+
+            <!-- Graph in Overview -->
+            <div class="graph-card">
+                <h3>Water Flow Over Time</h3>
+                <div class="graph-container">
+                    <canvas id="overviewChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="graphs" class="dashboard-container fade-in" style="display: none;">
+            <div class="card">
+                <h3>Water Flow Over Time</h3>
+                <canvas id="flowChart"></canvas>
+            </div>
+            <div class="card">
+                <h3>Daily Water Consumption</h3>
+                <canvas id="dailyChart"></canvas>
+            </div>
+            <div class="card">
+                <h3>Monthly Usage</h3>
+                <canvas id="monthlyChart"></canvas>
+            </div>
+            <div class="card">
+                <h3>Real-Time Pump Activity</h3>
+                <canvas id="pumpChart"></canvas>
+            </div>
+        </div>
+
+        <div id="pumpStatus" class="dashboard-container fade-in" style="display: none;">
+            <div class="card">Pump Active: Yes</div>
+            <div class="card">Last Operation: 10 min ago</div>
+            <div class="card">Efficiency: 98%</div>
+            <div class="card">Temperature: 40°C</div>
+        </div>
+
+        <div id="mlPredictions" class="dashboard-container fade-in" style="display: none;">
+            <div class="card">Predicted Leak Risk: Low</div>
+            <div class="card">Suggested Action: Monitor usage</div>
+            <div class="card">Next Maintenance: 3 Days</div>
+            <div class="card">AI Confidence: 92%</div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(section) {
+            document.getElementById('sectionTitle').innerText = section.replace(/([A-Z])/g, ' $1').trim();
+            let sections = ["overview", "graphs", "pumpStatus", "mlPredictions"];
+            sections.forEach(s => {
+                document.getElementById(s).style.display = (s === section) ? "grid" : "none";
+            });
+        }
+
+        function generateRandomData(length, max) {
+            return Array.from({ length }, () => Math.floor(Math.random() * max));
+        }
+
+        function createChart(canvasId, label, data, color) {
+            let ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ["6AM", "9AM", "12PM", "3PM", "6PM", "9PM"],
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: color,
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            createChart("overviewChart", "Water Flow", generateRandomData(6, 100), "orange");
+            createChart("flowChart", "Water Flow", generateRandomData(6, 100), "blue");
+            createChart("dailyChart", "Daily Consumption", generateRandomData(6, 200), "green");
+            createChart("monthlyChart", "Monthly Usage", generateRandomData(6, 500), "red");
+            createChart("pumpChart", "Pump Activity", generateRandomData(6, 50), "purple");
+        });
+    </script>
+
+</body>
+</html>
